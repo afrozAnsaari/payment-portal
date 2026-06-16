@@ -1,0 +1,34 @@
+├── data
+│   ├── external
+│   │   ├── credit_card.zip
+│   │   └── paysim.zip
+│   ├── processed
+│   └── raw
+│       ├── creditcard.csv
+│       └── paysim.csv
+├── file_structure.txt
+├── models
+│   ├── credit_card
+│   │   └── xgboost_credit_card_model.joblib
+│   ├── ieee_cis
+│   └── paysim
+├── notebooks
+│   ├── credit_card
+│   │   └── credit_card_fraud_detection.ipynb
+│   └── paysim
+│       ├── 01_eda.ipynb
+│       └── 02_xgboost_model.ipynb
+├── README.md
+├── reports
+│   └── figures
+│       ├── Balance Difference: Fraud vs Legit.png
+│       ├── Fraud Transactions: Balance Before vs After.png
+│       ├── fraud_vs_legit_transaction_amounts.png
+│       └── Top Fraud Features.png
+├── requirements.txt
+└── src
+    ├── api
+    ├── data
+    ├── models
+    └── utils
+
