@@ -1,5 +1,5 @@
 from sqlalchemy import Column
-from sqlalchemy import Integer, String, Float
+from sqlalchemy import Integer, String, Float, Boolean
 from sqlalchemy import DateTime
 from sqlalchemy.sql import func
 
@@ -18,6 +18,8 @@ class Merchant(Base):
     api_key = Column(String, unique=True)
 
     created_at = Column(DateTime, default=func.now())
+
+    is_active = Column(Boolean, default=True)
 
 
 class Payment(Base):
