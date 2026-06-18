@@ -5,6 +5,12 @@ from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
 
 
+from src.auth.verify_api_key import verify_api_key
+
+from src.databases.models import Merchant
+
+from src.security.rate_limitter import check_rate_limit
+
 from src.databases.database import get_db
 
 from src.schemas.payment import PaymentRequest
@@ -22,15 +28,16 @@ router = APIRouter(tags=["Payments"])
 def make_payments(
     payment: PaymentRequest,
     idempotency_key: str = Header(None),
-    db: Session = Depends(get_db),
+    merchant: Merchant = Depends(verify_api_key),
+    db: Session = Depends(get_db)
 ):
-    if idempotency_key:
-        cached_response = redis_client.get(idempotency_key)
 
-    if cached_response:
-        return json.loads(cached_response)
+    if idempotency_key:
+        redis_key = f"idempotency:{merchant.id}"
 
     payment_dict = payment.model_dump()
+
+    payment_dict["merchant_id"] = merchant.id
 
     fraud_result = predict_fraud(payment_dict)
 

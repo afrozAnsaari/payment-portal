@@ -1,6 +1,6 @@
-from sqlalchemy import Column
-from sqlalchemy import Integer, String, Float, Boolean
-from sqlalchemy import DateTime
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime
+
+
 from sqlalchemy.sql import func
 
 
@@ -13,9 +13,9 @@ class Merchant(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    name = Column(String)
+    name = Column(String, nullable=False)
 
-    api_key = Column(String, unique=True)
+    api_key = Column(String, unique=True, index=True, nullable=False)
 
     created_at = Column(DateTime, default=func.now())
 

@@ -1,4 +1,6 @@
-from src.databases.models import Payment
+import secrets
+
+from src.databases.models import Payment, Merchant
 
 
 def create_payment(db, payment_data, fraud_result):
@@ -18,3 +20,18 @@ def create_payment(db, payment_data, fraud_result):
     db.refresh(payment)
 
     return payment
+
+
+def create_merchant(db, merchant_data):
+
+    api_key = "sk_test" + secrets.token_hex(32)
+
+    merchant = Merchant(name=merchant_data["name"], api_key=api_key)
+
+    db.add(merchant)
+
+    db.commit()
+
+    db.refresh(merchant)
+
+    return merchant
