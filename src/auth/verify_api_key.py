@@ -19,22 +19,21 @@ security = HTTPBearer()
 
 
 def verify_api_key(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    x_api_key: str = Header(None),
     db: Session = Depends(get_db),
 ) -> Merchant:
 
-    api_key=credentials.credentials
-    merchant = (db.query(Merchant)
-                .filter(
-                    Merchant.api_key == api_key
-                    )
-                .first()
-                )
+    if x_api_key is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing API Key",
+        )
+    merchant = db.query(Merchant).filter(Merchant.api_key == x_api_key).first()
 
     if merchant is None:
-        raise HTTPException(status_code=403, detail="Invalid API Key")
-
-    if merchant.is_active is False:
-        raise HTTPException(status_code=403, detail="Merchant disabled")
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid API Key",
+        )
 
     return merchant

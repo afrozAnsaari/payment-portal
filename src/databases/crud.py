@@ -1,6 +1,15 @@
 import secrets
 
+import hashlib
+
+from src.databases.models import Customer
+
+from src.schemas.customer import CustomerCreate
+
 from src.databases.models import Payment, Merchant, User, Account
+
+
+from src.security.password import hash_password
 
 
 def create_payment(db, payment_data, fraud_result):
@@ -39,27 +48,26 @@ def create_merchant(db, merchant_data):
 
 def create_user(
     db,
-    data,
+    user_data,
 ):
     user = User(
-        name=data["name"],
-        email=data["email"],
+        name=user_data["name"],
+        email=user_data["email"],
+        password_hash=hash_password(user_data["password"]),
     )
 
     db.add(user)
 
-    db.commit()
-
-    db.refresh(user)
+    db.flush()
 
     account = Account(
         user_id=user.id,
-        balance=data["initial_balance"],
+        balance=user_data["initial_balance"],
     )
 
     db.add(account)
     db.commit()
-    db.refresh(account)
+    db.refresh(user)
 
     return user
 
@@ -72,3 +80,27 @@ def get_account_balance(
     account = db.query(Account).filter(Account.id == account_id).first()
 
     return account
+
+
+def create_customer(db, customer_data: CustomerCreate):
+
+    aadhaar_hash = hashlib.sha256(customer_data.aadhar_no.encode()).hexdigest()
+
+    pan_hash = hashlib.sha256(customer_data.pan_no.encode()).hexdigest()
+
+    customer = Customer(
+        full_name=customer_data.full_name,
+        dob=customer_data.dob,
+        mobile_no=customer_data.mobile_no,
+        email=customer_data.email,
+        aadhar_hash=aadhaar_hash,
+        pan_hash=pan_hash,
+        address=customer_data.address,
+    )
+
+    db.add(customer)
+
+    db.commit()
+    db.refresh(customer)
+
+    return customer

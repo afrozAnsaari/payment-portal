@@ -8,6 +8,7 @@ asttokens==3.0.1
 async-lru==2.3.0
 attrs==26.1.0
 babel==2.18.0
+bcrypt==4.0.1
 beautifulsoup4==4.14.3
 black==26.5.1
 bleach==6.3.0
@@ -21,7 +22,10 @@ cycler==0.12.1
 debugpy==1.8.20
 decorator==5.3.1
 defusedxml==0.7.1
+dnspython==2.8.0
 docstring-to-markdown==0.17
+ecdsa==0.19.2
+email-validator==2.3.0
 executing==2.2.1
 fastapi==0.136.3
 fastjsonschema==2.21.2
@@ -31,7 +35,7 @@ greenlet==3.5.1
 h11==0.16.0
 httpcore==1.0.9
 httpx==0.28.1
-idna==3.16
+idna==3.18
 imbalanced-learn==0.14.1
 importlib-metadata==9.0.0
 ipykernel==7.2.0
@@ -74,6 +78,7 @@ packaging==26.2
 pandas==3.0.3
 pandocfilters==1.5.1
 parso==0.8.7
+passlib==1.7.4
 pathspec==1.1.1
 pexpect==4.9.0
 pillow==12.2.0
@@ -86,6 +91,7 @@ psutil==7.2.2
 psycopg2-binary==2.9.12
 ptyprocess==0.7.0
 pure-eval==0.2.3
+pyasn1==0.6.3
 pycparser==3.0
 pydantic==2.13.4
 pydantic-core==2.46.4
@@ -93,6 +99,7 @@ pygments==2.20.0
 pyparsing==3.3.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
+python-jose==3.5.0
 python-json-logger==4.1.0
 python-lsp-jsonrpc==1.1.2
 python-lsp-server==1.14.0
@@ -106,6 +113,7 @@ rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1
 rfc3987-syntax==1.1.0
 rpds-py==0.30.0
+rsa==4.9.1
 scikit-learn==1.8.0
 scipy==1.17.1
 seaborn==0.13.2

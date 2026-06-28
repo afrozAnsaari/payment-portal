@@ -12,7 +12,10 @@ router = APIRouter(tags=["Users"])
 
 
 @router.post("/users")
-def register_user(user: UserCreate, db: Session = Depends(get_db)):
+def register_user(
+    user: UserCreate,
+    db: Session = Depends(get_db),
+):
     created = create_user(
         db,
         user.model_dump(),
@@ -21,5 +24,5 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     return {
         "user_id": created.id,
         "name": created.name,
-        "account_id": created.account.id
+        "account_id": created.account.id,
     }

@@ -1,11 +1,87 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey
+from datetime import datetime, date
+
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Float,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Date,
+)
 
 
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import (
+    relationship,
+    Mapped,
+    mapped_column,
+)
 
 from src.databases.database import Base
+
+
+class Card(Base):
+
+    __tablename__ = "cards"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    account_id: Mapped[int] = mapped_column(
+        ForeignKey("accounts.id"),
+        nullable=False,
+    )
+
+    card_number_hash: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        nullable=False,
+    )
+
+    last4: Mapped[str] = mapped_column(
+        String(4),
+        nullable=False,
+    )
+
+    expiry_month: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+    )
+
+    expiry_year: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+    )
+
+    network: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+    )
+
+    card_type: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+    )
+
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=func.now(),
+    )
+
+    account: Mapped["Account"] = relationship(
+        "Account",
+        back_populates="cards",
+    )
 
 
 class Merchant(Base):
@@ -30,7 +106,7 @@ class Merchant(Base):
         nullable=False,
     )
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=func.now(),
     )
@@ -91,34 +167,41 @@ class Payment(Base):
 
 
 class User(Base):
+
     __tablename__ = "users"
 
-    id = Column(
-        Integer,
+    id: Mapped[int] = mapped_column(
         primary_key=True,
         index=True,
     )
 
-    name = Column(
+    name: Mapped[str] = mapped_column(
         String,
         nullable=False,
     )
 
-    email = Column(
+    email: Mapped[str] = mapped_column(
         String,
         unique=True,
         nullable=False,
     )
 
-    created_at = Column(
-        DateTime,
+    created_at: Mapped[datetime] = mapped_column(
         default=func.now(),
     )
 
-    account = relationship(
-        "Account",
-        back_populates="user",
-        uselist=False,
+    # account: Mapped["Account"] = relationship(
+    #     back_populates="user",
+    #     uselist=False,
+    # )
+    password_hash: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+    )
+
+    payment_pin_hash: Mapped[str | None] = mapped_column(
+        String,
+        nullable=True,
     )
 
 
@@ -126,30 +209,34 @@ class Account(Base):
 
     __tablename__ = "accounts"
 
-    id = Column(
-        Integer,
+    id: Mapped[int] = mapped_column(
         primary_key=True,
         index=True,
     )
 
-    user_id = Column(
-        Integer,
-        ForeignKey("users.id"),
-        unique=True,
+    customer: Mapped["Customer"] = relationship(
+        "Customer",
+        back_populates="accounts",
     )
 
-    balance = Column(
-        Float,
+    customer_id: Mapped[int] = mapped_column(
+        ForeignKey("customers.id"),
+        nullable=False,
+    )
+
+    balance: Mapped[float] = mapped_column(
         default=0,
     )
 
-    created_at = Column(
-        DateTime,
-        default=func.now(),
-    )
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
 
-    user = relationship(
-        "User",
+    # user: Mapped["User"] = relationship(
+    #     "User",
+    #     back_populates="account",
+    # )
+
+    cards: Mapped[list["Card"]] = relationship(
+        "Card",
         back_populates="account",
     )
 
@@ -186,4 +273,69 @@ class LedgerEntry(Base):
     created_at = Column(
         DateTime,
         default=func.now(),
+    )
+
+
+class Customer(Base):
+
+    __tablename__ = "customers"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    full_name: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+    )
+
+    dob: Mapped[date] = mapped_column(
+        Date,
+        nullable=False,
+    )
+
+    mobile_no: Mapped[str] = mapped_column(
+        String(10),
+        unique=True,
+        nullable=False,
+    )
+
+    email: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        nullable=False,
+    )
+
+    aadhar_hash: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        nullable=False,
+    )
+
+    pan_hash: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        nullable=False,
+    )
+
+    address: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+    )
+
+    kyc_verified: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=func.now(),
+    )
+
+    accounts: Mapped[list["Account"]] = relationship(
+        "Account",
+        back_populates="customer",
     )

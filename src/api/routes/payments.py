@@ -4,16 +4,23 @@ from fastapi import (
     APIRouter,
     Depends,
     Header,
+    HTTPException,
 )
 
 from sqlalchemy.orm import Session
 
+from src.auth.verify_user import get_current_user
+
+from src.auth.verify_payment_pin import verify_payment_pin
 
 from src.auth.verify_api_key import verify_api_key
 
-from src.databases.models import Merchant
+from src.databases.models import Merchant, User
 
 from src.security.rate_limitter import check_rate_limit
+
+from src.security.password import verify_password
+
 
 from src.databases.database import get_db
 
@@ -32,11 +39,16 @@ router = APIRouter(tags=["Payments"])
 @router.post("/payments")
 def make_payments(
     payment: PaymentRequest,
+    user: User = Depends(get_current_user),
     idempotency_key: str = Header(None),
     merchant: Merchant = Depends(verify_api_key),
     db: Session = Depends(get_db),
 ):
 
+    verify_payment_pin(
+        payment.payment_pin,
+        user,
+    )
     redis_key = None
     cached_response = None
     if idempotency_key:
@@ -52,10 +64,39 @@ def make_payments(
 
     payment_dict = payment.model_dump()
 
+    payment_dict["sender_account_id"] = user.account.id
+
     payment_dict["merchant_id"] = merchant.id
 
-    fraud_result = predict_fraud(payment_dict)
+    payment_dict = payment.model_dump()
 
+    payment_dict["sender_account_id"] = user.account.id
+
+    payment_dict["merchant_id"] = merchant.id
+
+    fraud_data = payment_dict.copy()
+
+    fraud_data.pop(
+        "payment_pin",
+        None,
+    )
+
+    fraud_data.pop(
+        "sender_account_id",
+        None,
+    )
+
+    fraud_data.pop(
+        "receiver_account_id",
+        None,
+    )
+
+    fraud_data.pop(
+        "merchant_id",
+        None,
+    )
+
+    fraud_result = predict_fraud(fraud_data)
     saved_payment = process_payment_transaction(
         db,
         payment_dict,

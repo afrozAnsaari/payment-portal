@@ -11,7 +11,7 @@ from src.data.preprocess import preprocess_transaction
 
 BASE_DIR = Path(__file__).resolve().parents[3]
 
-print(BASE_DIR)
+# print(BASE_DIR)
 
 model = joblib.load(BASE_DIR / "models" / "paysim" / "xgboost_paysim_model.joblib")
 
