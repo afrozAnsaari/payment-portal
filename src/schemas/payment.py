@@ -1,22 +1,26 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from datetime import datetime
+
+from pydantic import BaseModel, Field
 
 
-class PaymentRequest(BaseModel):
+class PaymentCreate(BaseModel):
+    receiver: str = Field(
+        ...,
+        description="Receiver mobile number or UPI ID",
+    )
+    amount: float = Field(gt=0)
+    account_pin: str
 
-    type: str
 
-    # sender_account_id: int
-
-    receiver_account_id: int
-
+class PaymentResponse(BaseModel):
+    payment_id: int
     amount: float
+    status: str
+    receiver: str
+    transaction_type: str
+    created_at: datetime
+    message: str
 
-    oldbalanceOrg: float
-
-    newbalanceOrig: float
-
-    oldbalanceDest: float
-
-    newbalanceDest: float
-
-    payment_pin: str
+    model_config = {"from_attributes": True}

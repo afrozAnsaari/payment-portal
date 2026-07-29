@@ -1,17 +1,12 @@
-from pydantic import (
-    BaseModel,
-    Field,
-)
+from pydantic import BaseModel, Field
 
 
 class UserCreate(BaseModel):
+
     name: str
+
+    mobile_no: str
 
     email: str
 
-    initial_balance: float = 0
-
-    password: str = Field(
-        min_length=8,
-        max_length=16,
-    )
+    password: str

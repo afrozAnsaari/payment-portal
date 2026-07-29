@@ -15,7 +15,7 @@ from src.databases.models import (
     Account,
 )
 
-from src.auth.verify_payment_pin import verify_payment_pin
+from src.auth.verify_payment_pin import verify_acc_pin
 
 from src.security.password import verify_password
 
@@ -30,7 +30,7 @@ def get_balance(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    verify_payment_pin(request.pin, user)
+    verify_acc_pin(request.pin, user)
 
     account = db.query(Account).filter(Account.user_id == user.id).first()
 

@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 
 from sqlalchemy import (
     Column,
@@ -9,8 +9,15 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Date,
+    Text,
+    Enum as SQLEnum,
 )
 
+from src.utils.enums.BankName import BankName
+from src.utils.enums.AccountType import AccountType
+from src.utils.enums.CardNetwork import CardNetwork
+from src.utils.enums.CardStatus import CardStatus
+from src.utils.enums.AccountStatus import AccountStatus
 
 from sqlalchemy.sql import func
 from sqlalchemy.orm import (
@@ -23,7 +30,6 @@ from src.databases.database import Base
 
 
 class Card(Base):
-
     __tablename__ = "cards"
 
     id: Mapped[int] = mapped_column(
@@ -43,6 +49,11 @@ class Card(Base):
         nullable=False,
     )
 
+    card_number_encrypted: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+    )
+
     last4: Mapped[str] = mapped_column(
         String(4),
         nullable=False,
@@ -58,19 +69,15 @@ class Card(Base):
         nullable=False,
     )
 
-    network: Mapped[str] = mapped_column(
-        String,
+    network: Mapped[CardNetwork] = mapped_column(
+        SQLEnum(CardNetwork),
         nullable=False,
     )
 
-    card_type: Mapped[str] = mapped_column(
-        String,
+    status: Mapped[CardStatus] = mapped_column(
+        SQLEnum(CardStatus),
+        default=CardStatus.ACTIVE.value,
         nullable=False,
-    )
-
-    is_active: Mapped[bool] = mapped_column(
-        Boolean,
-        default=True,
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -126,82 +133,52 @@ class Payment(Base):
         index=True,
     )
 
-    merchant_id = Column(
+    sender_upi_profile_id = Column(
         Integer,
+        ForeignKey("upi_profiles.id"),
+        nullable=False,
     )
 
-    transaction_type = Column(
-        String,
-    )
-
-    amount = Column(
-        Float,
-    )
-
-    status = Column(
-        String,
-    )
-
-    risk_score = Column(
-        Float,
-    )
-
-    fraud_decision = Column(
-        String,
-    )
-
-    created_at = Column(
-        DateTime,
-        default=func.now(),
+    receiver_upi_profile_id = Column(
+        Integer,
+        ForeignKey("upi_profiles.id"),
+        nullable=False,
     )
 
     sender_account_id = Column(
         Integer,
         ForeignKey("accounts.id"),
+        nullable=False,
     )
 
     receiver_account_id = Column(
         Integer,
         ForeignKey("accounts.id"),
+        nullable=False,
     )
 
-
-class User(Base):
-
-    __tablename__ = "users"
-
-    id: Mapped[int] = mapped_column(
-        primary_key=True,
-        index=True,
-    )
-
-    name: Mapped[str] = mapped_column(
+    transaction_type = Column(
         String,
         nullable=False,
     )
 
-    email: Mapped[str] = mapped_column(
-        String,
-        unique=True,
+    amount = Column(
+        Float,
         nullable=False,
     )
 
-    created_at: Mapped[datetime] = mapped_column(
-        default=func.now(),
-    )
-
-    # account: Mapped["Account"] = relationship(
-    #     back_populates="user",
-    #     uselist=False,
-    # )
-    password_hash: Mapped[str] = mapped_column(
+    status = Column(
         String,
         nullable=False,
     )
 
-    payment_pin_hash: Mapped[str | None] = mapped_column(
-        String,
-        nullable=True,
+    risk_score = Column(Float)
+
+    fraud_decision = Column(String)
+
+    created_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
     )
 
 
@@ -210,13 +187,9 @@ class Account(Base):
     __tablename__ = "accounts"
 
     id: Mapped[int] = mapped_column(
+        Integer,
         primary_key=True,
         index=True,
-    )
-
-    customer: Mapped["Customer"] = relationship(
-        "Customer",
-        back_populates="accounts",
     )
 
     customer_id: Mapped[int] = mapped_column(
@@ -224,19 +197,53 @@ class Account(Base):
         nullable=False,
     )
 
+    account_number: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        nullable=False,
+    )
+
+    bank_name: Mapped[BankName] = mapped_column(
+        SQLEnum(BankName),
+        nullable=False,
+    )
+
+    ifsc_code: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+    )
+
+    account_type: Mapped[AccountType] = mapped_column(
+        SQLEnum(AccountType),
+        nullable=False,
+    )
+
     balance: Mapped[float] = mapped_column(
+        Float,
         default=0,
     )
 
-    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    status: Mapped[AccountStatus] = mapped_column(
+        SQLEnum(AccountStatus),
+        default=AccountStatus.ACTIVE.value,
+        nullable=False,
+    )
 
-    # user: Mapped["User"] = relationship(
-    #     "User",
-    #     back_populates="account",
-    # )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=func.now(),
+    )
+
+    customer: Mapped["Customer"] = relationship(
+        back_populates="accounts",
+    )
 
     cards: Mapped[list["Card"]] = relationship(
         "Card",
+        back_populates="account",
+    )
+
+    linked_upi_accounts: Mapped[list["LinkedBankAccount"]] = relationship(
         back_populates="account",
     )
 
@@ -314,9 +321,19 @@ class Customer(Base):
         nullable=False,
     )
 
+    aadhar_encrypted: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+    )
+
     pan_hash: Mapped[str] = mapped_column(
         String,
         unique=True,
+        nullable=False,
+    )
+
+    pan_encrypted: Mapped[str] = mapped_column(
+        Text,
         nullable=False,
     )
 
@@ -338,4 +355,125 @@ class Customer(Base):
     accounts: Mapped[list["Account"]] = relationship(
         "Account",
         back_populates="customer",
+    )
+
+
+class UPIProfile(Base):
+
+    __tablename__ = "upi_profiles"
+
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+    )
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False,
+        index=True,
+    )
+
+    upi_id: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        nullable=False,
+    )
+
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        default=func.now(),
+    )
+
+    user: Mapped["User"] = relationship(
+        back_populates="upi_profiles",
+    )
+
+    linked_accounts: Mapped[list["LinkedBankAccount"]] = relationship(
+        back_populates="upi_profile",
+    )
+
+
+class User(Base):
+
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+        index=True,
+    )
+
+    name: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+    )
+
+    mobile_no: Mapped[str] = mapped_column(
+        String(10),
+        unique=True,
+        nullable=False,
+    )
+
+    email: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+        unique=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        default=func.now(),
+    )
+
+    password_hash: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+    )
+
+    payment_pin_hash: Mapped[str | None] = mapped_column(
+        String,
+        nullable=True,
+    )
+
+    upi_profiles: Mapped[list["UPIProfile"]] = relationship(
+        back_populates="user",
+    )
+
+
+class LinkedBankAccount(Base):
+
+    __tablename__ = "linked_bank_accounts"
+
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+    )
+
+    upi_profile_id: Mapped[int] = mapped_column(
+        ForeignKey("upi_profiles.id"),
+        nullable=False,
+        index=True,
+    )
+
+    account_id: Mapped[int] = mapped_column(
+        ForeignKey("accounts.id"),
+        nullable=False,
+        index=True,
+    )
+
+    is_primary: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+    )
+
+    linked_at: Mapped[datetime] = mapped_column(
+        default=func.now(),
+    )
+
+    upi_profile: Mapped["UPIProfile"] = relationship(
+        back_populates="linked_accounts",
+    )
+
+    account: Mapped["Account"] = relationship(
+        back_populates="linked_upi_accounts",
     )

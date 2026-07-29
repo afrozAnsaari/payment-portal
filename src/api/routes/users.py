@@ -11,18 +11,17 @@ from src.databases.crud import create_user
 router = APIRouter(tags=["Users"])
 
 
-@router.post("/users")
-def register_user(
-    user: UserCreate,
-    db: Session = Depends(get_db),
-):
+@router.post("/users/register")
+def register_user(user: UserCreate, db: Session = Depends(get_db)):
     created = create_user(
-        db,
-        user.model_dump(),
+        db=db,
+        user_data=user,
     )
 
     return {
-        "user_id": created.id,
-        "name": created.name,
-        "account_id": created.account.id,
+        "message": created["message"],
+        "user_id": created["user_id"],
+        "name": created["name"],
+        "mobile_no": created["mobile_no"],
+        "email": created["email"],
     }

@@ -26,12 +26,12 @@ def login(
     db: Session = Depends(get_db),
 ):
 
-    user = db.query(User).filter(User.email == credentials.email).first()
+    user = db.query(User).filter(User.mobile_no == credentials.mobile_no).first()
 
     if user is None:
         raise HTTPException(
-            status_code=402,
-            detail="Invalid Credentials",
+            status_code=401,
+            detail="Invalid mobile or passwords. Please try again",
         )
 
     valid_password = verify_password(
@@ -42,7 +42,7 @@ def login(
     if not valid_password:
         raise HTTPException(
             status_code=401,
-            detail="Invalid passowrd",
+            detail="Incorrect mobile number or password",
         )
 
     token = create_access_token(

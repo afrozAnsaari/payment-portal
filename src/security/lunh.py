@@ -1,17 +1,9 @@
 # Check the validity using Luhn's algorithm
 
 
-def validate_card_number(
-    card_number: str,
-) -> bool:
-    digits = []
+def validate_card_number(card_number: str) -> bool:
 
-    for digit in card_number:
-
-        if not digit.isdigit():
-            return False
-
-        digits.append(int(digit))
+    digits = [int(num) for num in card_number]
 
     checksum = 0
 

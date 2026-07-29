@@ -13,15 +13,13 @@ SECRET_KEY = "dev_secret_change_later"
 
 ALGORITHM = "HS256"
 
-ACCESSS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRY_IN_MIN = 60
 
 
 def create_access_token(data: dict):
     payload = data.copy()
 
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=ACCESSS_TOKEN_EXPIRE_MINUTES
-    )
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRY_IN_MIN)
 
     payload.update({"exp": expire})
 
